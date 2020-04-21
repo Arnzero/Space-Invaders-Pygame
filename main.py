@@ -83,12 +83,15 @@ enemyY_change = []
 num_of_enemies = 6
 
 enemyX = []
+betterEnemySpacer = 90
+lowerbound = - 90
 for i in range(num_of_enemies):
     x = 0
-    x = random.randint(0, 736)
+    x = random.randint(lowerbound + betterEnemySpacer, betterEnemySpacer)
     while(x in enemyX):
-        x =  random.randint(50, 150)
+        x =  random.randint(lowerbound + betterEnemySpacer, betterEnemySpacer) # old values 50 and 150
     enemyX.append(x)
+    betterEnemySpacer += 90
 
 enemyY = []
 for i in range(num_of_enemies):
