@@ -2,6 +2,8 @@ import math
 import random
 import wave
 import pickle
+import textinput
+import pygame
 
 import pygame
 from pygame import mixer
@@ -64,7 +66,7 @@ f.close()
 
 # Player
 shipList = []
-shipList.append('vaccine.png')
+shipList.append('vaccine.png') ### ding ding
 shipList.append('python-file.png')
 shipList.append('player.png')
 
@@ -103,7 +105,7 @@ for i in range(num_of_enemies):
 
 
 for i in range(num_of_enemies):
-    enemyImg.append(pygame.image.load('enemy.png'))
+    enemyImg.append(pygame.image.load('enemy.png')) # ding ding
     #enemyX.append(random.randint(0, 736))
     #enemyY.append(random.randint(50, 150))
     enemyX_change.append(4)
@@ -114,7 +116,7 @@ for i in range(num_of_enemies):
 # Ready - You can't see the bullet on the screen
 # Fire - The bullet is currently moving
 
-bulletImg = pygame.image.load('bullet.png')
+bulletImg = pygame.image.load('bullet.png') # ding ding
 bulletX = 0
 bulletY = 480
 bulletX_change = 0
@@ -137,12 +139,77 @@ def show_score(x, y):
     score = font.render("Score : " + str(score_value), True, (255, 255, 255))
     screen.blit(score, (x, y))
 
+def grad():
+    wrd = font.render("Graduation", True, (255,255,255))
+    screen.blit(wrd, (300, 550))
 
+def pausedmsg():
+    wrd = font.render("Paused", True, (255,255,255))
+    screen.blit(wrd, (300, 200))
+
+newHS = 0
 def game_over_text():
+    txtbx = eztext.Input(maxlength=45, color=(255,0,0), prompt='Enter Initials: ')
+    clock = pygame.time.Clock()
+    
+    global enter_high_score
+    while enter_high_score:
+        clock.tick(30)
+
+
+        # events for txtbx
+        events = pygame.event.get()
+        # process other events
+        for event in events:
+            if event.type == pygame.QUIT:
+                enter_high_score = False
+            if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_RETURN:
+                    global newHS
+                    newHS = txtbx.value
+                    enter_high_score = False
+
+        # update txtbx
+
+        txtbx.update(events)
+        # blit txtbx on the sceen
+        txtbx.draw(screen)
+        # refresh the display
+        pygame.display.flip()
+
+
+    #txtin = textinput.TextInput()
+    #events = pygame.event.get()
+    #for event in events:
+     #   if event.type ==pygame.QUIT:
+      #      exit()
+        
+        #Feed it with events every frame
+        #txtin.update(event)
+        #Blit it's surface onto the screen
+        #screen.blit(txtin.get_surface(),(200,200))
+
+        #if txtin.update(events):
+         #   newHS = textinput.get_text()
+
+  
+
+
+    k, stR = load_highscore_from_file()
+    highScores = k
+
+    highScores["5th"]= newHS,score_value
+
+    # store file, only top 3
+    store_highscore_in_file(k, top_n=6)
+
+    #load back in new dict and str
+    kk, hsSTR = load_highscore_from_file()
+   
 
     endgame= ["GAME OVER", ":High Scores:", str(highScores["1st"][0])+ ": "+str(highScores["1st"][1]) , str(highScores["2nd"][0])+ ": " + str(highScores["2nd"][1]) ,
                 str(highScores["3rd"][0])+ ": " + str(highScores["3rd"][1]),str(highScores["4th"][0])+ ": "+str(highScores["4th"][1]),
-                str(highScores["5th"][0])+ ": " + str(highScores["5th"][1])]
+                str(highScores["5th"][0])+ ": " + str(highScores["5th"][1]),]
     label = []
     
     for line in endgame:
@@ -181,11 +248,39 @@ def isCollision(enemyX, enemyY, bulletX, bulletY):
     else:
         return False
 
+# forked from stack overflow "https://stackoverflow.com/questions/16726354/saving-the-highscore-for-a-python-game"
+def store_highscore_in_file(dictionary, fn = "./high.txt", top_n=0):
+    """Store the dict into a file, only store top_n highest values."""
+    with open(fn,"w") as f:
+        for idx,(rank, plyr) in enumerate(sorted(dictionary.items(), key= lambda x:x[0][1])):
+            f.write(f"{rank}:{plyr[0]}:{plyr[1]}\n")
+            if top_n and idx == top_n-1:
+                break
+
+def load_highscore_from_file(fn = "./high.txt"):
+    """Retrieve dict from file"""
+    hs = {}
+    hstr =""
+    try:
+        with open(fn,"r") as f:
+            for line in f:
+
+                #name,_,points = line.partition(":")
+
+                els  = line.split(":")
+               
+                hs[els[0]]= els[1], int(els[2])
+                hstr += "\n" + els[1] + els[2]
+    except FileNotFoundError:
+        return {}
+    return hs, hstr
+
 
 # Game Loop
 shipSelection = True
 paused = False
 running = True
+enter_high_score = True
 
 # ship selection state
 while running and shipSelection:
@@ -229,6 +324,7 @@ while running and shipSelection:
     pygame.display.update()
    
 
+cautionflag = False
 # game start state
 while running and not shipSelection:
 
@@ -241,10 +337,19 @@ while running and not shipSelection:
     pygame.draw.lines(screen,(255,255,0), False, [[0,300],[800,300]], 3 )
     pygame.draw.lines(screen,(255,0,0), False, [[0,476],[800,476]], 5 )
 
+    if (not paused):
+        screen.blit(font.render("Press P to pause", True, (255,255,255)), (300, 20))
+        
+        
+
     # Background Image rendering
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        
+        
+        
+       
         
 
         # if keystroke is pressed check whether its right or left
@@ -285,19 +390,33 @@ while running and not shipSelection:
         playerY = 305
     elif playerY >= 476:
         playerY = 476
+    
 
+    if(cautionflag == True):
+        screen.blit(cautionList[random.randint(0,2) % 2], (650, 400))
     # Enemy Movement
     if not paused:
+        cautionflag = False
         for i in range(num_of_enemies):
 
             #caution, enemy  closing in
             if (enemyY[i]> 300 ):
-                screen.blit(cautionList[i % 2], (650, 400))
+                cautionflag = True
+               
+            elif ( cautionflag):
+                 cautionflag = True
+            else:
+                cautionflag = False
+            #if(enemyY[i] >= 2000):
+             #   cautionflag = False
+
+           
 
             # Game Over ###CHANGED FROM 440, or 110 to insta Game over or past playerY coordinate
-            if enemyY[i] > playerY or  enemyY[i] > 440:
+            if enemyY[i] > playerY or  enemyY[i] > 440: # insta game over
                 for j in range(num_of_enemies):
                     enemyY[j] = 2000
+                cautionflag = False
                 game_over_text()
                 break
 
@@ -343,7 +462,7 @@ while running and not shipSelection:
             fire_bullet(bulletX, bulletY)
             bulletY -= bulletY_change
 
-        
+        #grad()
         player(playerX, playerY)
         show_score(textX, testY)
         pygame.display.update()
