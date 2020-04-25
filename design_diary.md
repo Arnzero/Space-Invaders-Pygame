@@ -1,4 +1,5 @@
 ### Dear diary 4/24/2020 
+https://github.com/Arnzero/Space-Invaders-Pygame/blob/master/SpaceInvadersLiceCap.gif
 
 I watched the tutorial which was very insightful and it didn't feel that long
 even tho it was around 2 hours. Couple of things I focused on were;
